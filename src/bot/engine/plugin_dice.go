@@ -80,7 +80,7 @@ func (p *PluginDice) Handle( b *Bot, req *BotRequest ) (*BotResponse, bool) {
 	r.AddAttachment(
 		&BotResponseAttachment{
 			Color: "#00ff00",	
-			Text: fmt.Sprintf("You roll %s", strings.Join(results, ", ")),
+			Text: fmt.Sprintf("%s rolls %s", req.UserName, strings.Join(results, ", ")),
 			Title: fmt.Sprintf("Roll %d %d-sided dice", qty, sides),
 		},
 	)
