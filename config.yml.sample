@@ -1,0 +1,8 @@
+username: bot
+baseurl: "localhost"
+iconurl: "http://${baseurl}:${port}/static/bot.png"
+port: 6075
+token: <outgoing-webhook-token>
+slashstricttokens: true
+slashtokens:
+  - <a-slash-command-token>
