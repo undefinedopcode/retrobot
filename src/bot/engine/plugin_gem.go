@@ -210,6 +210,12 @@ func (p *PluginGem) Handle( b *Bot, req *BotRequest ) (*BotResponse, bool) {
 		}
 	} else {
 		switch args[0] {
+		case "help":
+			text = "```Help:\n" +
+				    "/gem add <text>    Adds a gem.\n" +
+				    "/gem remove <id>   Remove a gem if you own it.\n" +
+				    "/gem <id>          Show specific gem.\n" +
+				    "/gem               Show a random gem.```\n"
 		case "add":
 			t := ""
 			if len(args) > 1 {
