@@ -1,16 +1,22 @@
 package engine
 
+import "strings"
 import "time"
 import "log"
 import "io/ioutil"
 import "gopkg.in/yaml.v2"
 import "github.com/mmcdole/gofeed"
 
+const feedDefaultFormat = "${feed.name}: ${item.link}"
+
 type Feed struct {
 	Name string
 	URL string
 	CheckMinutes int
 	Hooks []string
+	IncludeDescription bool
+	Template string
+	IgnoreTitlePrefix string
 	lastMaxID int
 	lastUpdated time.Time
 	lastTime time.Time
@@ -55,6 +61,14 @@ func (p *PluginFeed) Init() {
 			p.FetchAndUpdate(true)
 		}
 	}()
+
+	data := map[string]string{
+		"feed.name": "Sample feed",
+		"item.link": "https://www.google.com",
+		"item.title": "Item title",
+		"item.description": "This is the item description.",
+	}
+	log.Printf("Feed sample: %s", p.expand(feedDefaultFormat, data))
 }
 
 func (p *PluginFeed) FetchAndUpdate(broadcast bool) {
@@ -70,6 +84,9 @@ func (p *PluginFeed) FetchAndUpdate(broadcast bool) {
 			for i:=len(f.Items)-1; i>=0; i-- {
 				item := f.Items[i]
 				if item.PublishedParsed != nil && item.PublishedParsed.After( feed.lastUpdated ) {
+					if feed.IgnoreTitlePrefix != "" && strings.HasPrefix(strings.ToLower(item.Title), strings.ToLower(feed.IgnoreTitlePrefix)) {
+						continue
+					} 
 					log.Printf("Update found: %s", item.Title)
 					feed.lastUpdated = *item.PublishedParsed
 					updates = append(updates, item)
@@ -81,12 +98,24 @@ func (p *PluginFeed) FetchAndUpdate(broadcast bool) {
 				for _, item := range updates {
 					for _, hook := range feed.Hooks {
 						log.Printf("POST %s", hook)
+
+						data := make(map[string]string)
+						data["feed.name"] = feed.Name
+						data["item.link"] = item.Link
+						data["item.title"] = item.Title
+						data["item.description"] = item.Description
+
+						text := feed.Template 
+						if text == "" {
+							text = feedDefaultFormat
+						}
+						
 						err := p.PostToIncoming( 
 							hook,
 							&BotResponse{
 								UserName: p.Bot.Config.Username,
 								IconURL: p.Bot.Expand(p.Bot.Config.IconURL),
-								Text: feed.Name + ": " + item.Link,		
+								Text: p.expand(text, data),		
 							},
 						)
 						if err != nil {
@@ -125,6 +154,19 @@ func (p *PluginFeed) Handle( b *Bot, req *BotRequest ) (*BotResponse, bool) {
 		},
 	)
 	return r, true
+}
+
+func (b *PluginFeed) expand( value string, data map[string]string ) string {
+	for reField.MatchString(value) {
+		m := reField.FindAllStringSubmatch(value, -1)
+		fullPattern := m[0][1]
+		name := m[0][2]
+		log.Printf("Got field match %s (%s)", fullPattern, name)
+		replacement := data[name]
+		log.Printf("Replace %s with %s", fullPattern, replacement)
+		value = strings.Replace(value, fullPattern, replacement, -1)
+	}
+	return value
 }
 
 func NewPluginFeed(b *Bot) *PluginFeed {

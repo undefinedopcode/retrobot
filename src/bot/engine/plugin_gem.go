@@ -205,7 +205,7 @@ func (p *PluginGem) Handle( b *Bot, req *BotRequest ) (*BotResponse, bool) {
 		if g == nil {
 			text = "No gems for this channel.  Add one with /gem add ..."
 		} else {
-			title = fmt.Sprintf("#%d (posted by %s on %v)", g.ID, g.Creator, g.Date)
+			title = fmt.Sprintf("#%d (posted by %s on %s)", g.ID, g.Creator, g.Date.Format("02/01/2006 15:04 MST"))
 			text = g.Text
 		}
 	} else {
@@ -224,7 +224,7 @@ func (p *PluginGem) Handle( b *Bot, req *BotRequest ) (*BotResponse, bool) {
 			if t != "" {
 				id, err := p.db.Add(req.ChannelID, req.UserName, time.Now(), t)
 				if err == nil {
-					title = fmt.Sprintf("#%d (posted by %s on %v)", id, req.UserName, time.Now())
+					title = fmt.Sprintf("#%d (posted by %s on %s)", id, req.UserName, time.Now().Format("02/01/2006 15:04 MST"))
 					text = t
 				} else {
 					text = "Failed to add gem."
@@ -255,7 +255,7 @@ func (p *PluginGem) Handle( b *Bot, req *BotRequest ) (*BotResponse, bool) {
 			if g == nil {
 				text = "No such gem.  Add one with /gem add ..."
 			} else {
-				title = fmt.Sprintf("#%d (posted by %s on %v)", g.ID, g.Creator, g.Date)
+				title = fmt.Sprintf("#%d (posted by %s on %s)", g.ID, g.Creator, g.Date.Format("02/01/2006 15:04 MST"))
 				text = g.Text
 			}
 		}
